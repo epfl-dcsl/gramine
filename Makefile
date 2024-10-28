@@ -14,6 +14,7 @@ build-tyche:
 		ninja -C build-port/ clean; \
 		sudo rm -rf build-port/ ; \
 		sudo rm -rf /gramine/ ; \
+		sudo mkdir -p /gramine/ ; \
 	fi
 	meson setup build-port/ -Ddirect=enabled -Dtyche=enabled -Dtyche_drivers=$(TYCHE_ROOT)/linux/drivers/ \
 		-Dtyche_backend=tyche -Dtyche_sdk=$(TYCHE_ROOT)/C/libraries/sdktyche \
