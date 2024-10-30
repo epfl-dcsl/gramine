@@ -6,6 +6,7 @@
 #include <asm-generic/mman-common.h>
 #include <errno.h>
 #include <linux/mman.h>
+#include <sys/mman.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "api.h"
@@ -112,23 +113,15 @@ shmem_info_t* init_shinfo(tyche_domain_t* domain, size_t nb_threads, uint64_t ad
   shinfo->rpc_queue = (void*) (shinfo->raw_start + s_rpc_queue);
 
   /* Allocate space for the futexes. Put it directly after the rest*/
-  shinfo->futex_mmap.start = (uintptr_t) mmap((void*) (shinfo->raw_size + shinfo->raw_start),
+  void* futex_res = (uintptr_t) mmap((void*) (shinfo->raw_size + shinfo->raw_start),
       FUTEX_MMAP_PAGES * PRESET_PAGESIZE, PROT_READ| PROT_WRITE,
       MAP_PRIVATE | MAP_FIXED_NOREPLACE | MAP_POPULATE | MAP_LOCKED | MAP_ANONYMOUS,
       -1, 0);
-  /// Map failed.
-  if (shinfo->futex_mmap.start == ((void*) -1)) {
-    log_error("Unable to map the futex mmap");
+  if (futex_res == MAP_FAILED) {
+    log_error("Map failed for futex");
     return NULL;
   }
-  if (!(shinfo->futex_mmap.start == (char*) (shinfo->raw_start + shinfo->raw_size))) {
-    log_error("Big allocation mmap bug: We expected %p, but got %p | errno %d | size %d\n",
-        shinfo->futex_mmap.start, 
-        (char*) (shinfo->raw_start + shinfo->raw_size), errno,
-        sizeof(shinfo->futex_mmap.start));
-    // TODO: this is a hack to get back on track.
-    shinfo->futex_mmap.start = (char*) (shinfo->raw_start + shinfo->raw_size);
-  }
+  shinfo->futex_mmap.start = (char*) futex_res;
   assert(shinfo->futex_mmap.start == (char*) (shinfo->raw_start + shinfo->raw_size));
   shinfo->futex_mmap.size = FUTEX_MMAP_PAGES * PRESET_PAGESIZE;
   assert(init_shmem(&(shinfo->futex_mmap), FUTEX_MMAP_PAGES) == 0);
