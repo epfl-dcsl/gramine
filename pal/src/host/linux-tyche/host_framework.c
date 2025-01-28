@@ -256,7 +256,12 @@ int create_enclave(sgx_arch_secs_t* secs, sgx_arch_token_t* token, unsigned long
     }
     /* Initialize the cores and traps.
      * For the moment set default values where we allow everything. */
-    secs->domain->traps = NO_TRAPS;
+    for (int i = 0; i < NB_TRAP_PERMS; i++) {
+      secs->domain->traps[i] = ENABLE_TRAP;
+      if (i == 0) {
+        secs->domain->traps[i] ^= ((1ULL << 32) - 1ULL);
+      }
+    }
     secs->domain->core_map = (1 << nb_threads) -1;
     secs->domain->perms = DEFAULT_PERM | TYCHE_PERM_CPUID;
     secs->domain->config.page_table_root = secs->domain->mmaps.tail->physoffset;
@@ -272,10 +277,13 @@ int create_enclave(sgx_arch_secs_t* secs, sgx_arch_token_t* token, unsigned long
     }
 
     /* Set the traps. */
-    if (backend_td_config(
-          secs->domain, TYCHE_CONFIG_TRAPS, secs->domain->traps) != SUCCESS) {
-      log_error("Unable to set the traps for the domain %d", secs->domain->handle);
-      goto failure;
+    for (usize i = TYCHE_CONFIG_TRAPS; i <= TYCHE_CONFIG_TRAPS3; i++) {
+      int idx = i - TYCHE_CONFIG_TRAPS;
+      if (backend_td_config(
+            secs->domain, i, secs->domain->traps[idx]) != SUCCESS) {
+        log_error("Unable to set the traps for the domain %d", secs->domain->handle);
+        goto failure;
+      }
     }
     /* Set the cores. */
     if (backend_td_config(
