@@ -257,7 +257,7 @@ int create_enclave(sgx_arch_secs_t* secs, sgx_arch_token_t* token, unsigned long
     /* Initialize the cores and traps.
      * For the moment set default values where we allow everything. */
     for (int i = 0; i < NB_TRAP_PERMS; i++) {
-      secs->domain->traps[i] = ENABLE_TRAP;
+      secs->domain->traps[i] = DISABLE_TRAP;
       if (i == 0) {
         secs->domain->traps[i] ^= ((1ULL << 32) - 1ULL);
       }

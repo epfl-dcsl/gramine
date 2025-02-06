@@ -17,7 +17,7 @@ static void pin_and_run(struct pal_enclave* enclave, int core_id) {
     int ret = SUCCESS;
 
     do {
-      ret = backend_td_vcpu_run(&(enclave->domain), core_id, 1 << gb_quantum);
+      ret = backend_td_vcpu_run(&(enclave->domain), core_id, 0);
       if (ret != SUCCESS) {
         log_error("Oupsy %d %d", errno, core_id);
         assert(0);
@@ -36,8 +36,9 @@ static void pin_and_run(struct pal_enclave* enclave, int core_id) {
           ret = FAILURE;
           break;
         case INTERRUPT:
-          log_error("Received an interrupt");
-          ret = FAILURE;
+          // For the moment ignore this
+          //log_error("Received an interrupt");
+          //ret = FAILURE;
           break;
         case TIMER:
           continue;
