@@ -67,7 +67,7 @@ static int64_t console_write(PAL_HANDLE handle, uint64_t offset, uint64_t size, 
 
     if (!(handle->flags & PAL_HANDLE_FD_WRITABLE))
         return -PAL_ERROR_DENIED;
-
+    
     int64_t bytes = DO_SYSCALL(write, handle->console.fd, buffer, size);
     return bytes < 0 ? unix_to_pal_error(bytes) : bytes;
 }
